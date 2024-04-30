@@ -1,0 +1,50 @@
+workflows:
+
+  ios-build:
+
+    name: iOS Build
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+
+    environment:
+      xcode: latest
+      cocoapods: default
+
+      vars:
+        XCODE_PROJECT: MyApp.xcodeproj
+        XCODE_SCHEME: MyApp
+        BUNDLE_ID: com.mycompany.myapp
+
+    scripts:
+    
+      - name: Copy Podfile
+        script: |
+          cp ./Podfile $CM_BUILD_DIR/Podfile
+
+      - name: Install dependencies
+        script: |  
+          cd $CM_BUILD_DIR
+          pod install
+
+      - name: Set bundle ID
+        script: |
+          xcode-project set-bundle-id "$BUNDLE_ID" "$XCODE_PROJECT"
+
+      - name: Build ipa
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME" \
+            --export-method ad-hoc
+
+    artifacts:
+    
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+    
+      email:
+      
+        recipients:
+          - justjacex@gmail.com
